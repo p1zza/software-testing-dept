@@ -2,7 +2,12 @@ RED='\e[31m'
 BLUE='\e[34m'
 
 echo -e "${RED}                                   [!] This Tool Must Run As ROOT [!]${NC}"
-
+echo -e ${CYAN}              "Select Best Option : "
+echo ""
+echo -e "${WHITE}              [1] Installation "
+echo -e "${WHITE}              [0] Exit "
+echo -n -e "Z4nzu >> "
+read choice
 INSTALL_DIR="/usr/share/doc/software_testing_dept"
 BIN_DIR="/usr/bin/"
 
