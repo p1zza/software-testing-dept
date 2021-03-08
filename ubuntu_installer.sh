@@ -30,7 +30,7 @@ if [ $choice == 1 ]; then
 	    fi
     		echo "[?] Installing ...";
 		echo "";
-		git clone https://github.com/p1zza/software-testing-dept.git "$INSTALL_DIR";
+		git clone https://github.com/p1zza/software-testing-dept.git -b master "$INSTALL_DIR";
 		echo "#!/bin/bash
 		python3 $INSTALL_DIR/software_testing_dept.py" '${1+"$@"}' > software_testing_dept;
 		sudo chmod +x software_testing_dept;
@@ -55,9 +55,9 @@ if [ -d "$INSTALL_DIR" ]; then
     echo "";
     echo "";
     echo -e $ORANGE "		[+]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[+]"
-    echo 			"		[+]						      									[+]"
-    echo -e $ORANGE "		[+]     ??? SoftTestingDept installed ??? 						[+]"
-    echo 			"		[+]						      									[+]"
+    echo 	"		[+]						      		[+]"
+    echo -e $ORANGE "		[+]     		SoftTestingDept installed		[+]"
+    echo	"		[+]						 		[+]"
     echo -e $ORANGE "		[+]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++[+]"
     else
         echo "[?] Installation Failed !!! [?]";
