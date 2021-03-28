@@ -9,12 +9,20 @@ class UI_LoginWindow():
                 ['&Toolbar', ['---','---', 'Command &3', 'Command &4']],
                 ['&Help', '&About...'], ]
 
-        layout = [[sg.Menu(menu_def,)],
-        [sg.Text('Логин:', size=(15, 1)), sg.Input(size=(20, 1), key=('-Login-'))],
-        [sg.Text('Пароль:', size=(15, 1)), sg.Input(size=(20, 1), key=('-Password-'),password_char='*')],
+        column_to_be_centered = [[sg.Menu(menu_def,)],
+        [sg.Text('Логин:', size=(15, 1)), sg.Input(size=(20, 1),default_text=('adminuser'), key=('-Login-'))],
+        [sg.Text('Пароль:', size=(15, 1)), sg.Input(size=(20, 1),default_text=('password'), key=('-Password-'), password_char='*')],
         [sg.Button('OK'), sg.Button('Exit')]]
 
-        window = sg.Window('Форма входа', layout)
+
+        layout = [[sg.Text(key='-EXPAND-', font='ANY 1', pad=(0, 0))],  # the thing that expands from top
+                  [sg.Text('', pad=(0, 0), key='-EXPAND2-'),  # the thing that expands from left
+                   sg.Column(column_to_be_centered, vertical_alignment='center', justification='center', k='-C-')]]
+
+        window = sg.Window('Window Title', layout, resizable=True, finalize=True)
+        window['-C-'].expand(True, True, True)
+        window['-EXPAND-'].expand(True, True, True)
+        window['-EXPAND2-'].expand(True, False, True)
 
         while True:
             event, values = window.read()
