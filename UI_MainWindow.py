@@ -11,18 +11,7 @@ class UI_MainWindow():
                 [sg.Text('Порт:',size=(20,1)),sg.Input(size=(20,1),default_text =('5432'),key=('-PORT-'))],
                 [sg.Text('Имя базы данных:',size=(20,1)),sg.Input(size=(20,1),default_text=('postgres'),key=('-DATABASE-'))],
                 [sg.Button('Проверить подключение')]]
-        '''
-        data = []
-        headings = []
-        SQLtables = []
-        i = 0
-        
 
-        tab2_layout = [[sg.Combo(values=SQLtables, key=('-COMBOTABLES-'),size=(20,1), auto_size_text=True),
-                        sg.Button(button_text=('Получить список таблиц'),size=(20,1)),
-                        sg.Button(button_text=('Получить записи из таблицы'),key=('-GETTABLES-'),size=(20,1),disabled=True)],
-                       [sg.Frame('',[[sg.T('')]], key='-COL1-')]]
-        '''
         users = []
 
         tab2_layout = [[sg.Input(size=(80,1),key=('-EXPRESSION-'))],
@@ -32,8 +21,12 @@ class UI_MainWindow():
         tab3_layout = [[sg.Button(button_text=('Получить данные о пользователях'), key=('-GETUSERSDATA-'), size=(30, 1))],
                        [sg.Multiline(auto_size_text=True, key=('-USERSDATA-'), size=(100, 10))],
                        [sg.Frame('',[[sg.Text('Изменить параметры пользователя')],
-                                 [sg.Combo(values = users, size = (20,1), auto_size_text=True,key='-USERSCOMBO-')],
-        [sg.T('Username'),sg.T('usesysid'),sg.T('usecreatedb'),sg.T('usesuper'),sg.T('userepl'),sg.T('usebypassrls'),sg.T('valuntil'),sg.T('useconfig')]])]]
+                       [sg.Combo(values = users, size = (20,1), auto_size_text=True,key='-USERSCOMBO-')]])],
+                       [sg.Frame('',[[sg.Text('Настроить права пользователя к таблицам'),
+                                      sg.Combo(values = users, size = (20,1), auto_size_text=True,key='-USERSCOMBO1-'),
+                                      sg.Button(button_text="Получить данные",key=('-GETUSERPRIV-'))],
+                            [sg.Multiline(auto_size_text=True, key=('-TABLEPRIVELEGIES-'), size=(60, 10))]])]]
+
         #CREATEDB, CREATEROLE, CREATEUSER, and even SUPERUSER
         #NOCREATEDB, NOCREATEROLE, NOCREATEUSER ,NOSUPERUSER
 
@@ -107,23 +100,32 @@ class UI_MainWindow():
 
             elif event == '-GETUSERSDATA-':
                 try:
-
                     db = DBprovider.DBProvider("")
                     db.get_users(cur)
                     headings = db.headings
                     data = db.userdata
                     print(headings)
                     print(data)
-
                     window['-USERSDATA-'].update(str(headings).replace(",", " |"), append=True)
                     window['-USERSDATA-'].update(("\n"), append=True)
                     window['-USERSDATA-'].update(str(data).replace(","," |"), append=True)
                     window['-USERSCOMBO-'].update(values=db.userNames)
+                    window['-USERSCOMBO1-'].update(values=db.userNames)
+                except Exception as error:
+                    sg.Popup('Ошибка', error.args)
+
+            elif event == '-GETUSERPRIV-':
+                try:
+                    user = values["-USERSCOMBO1-"]
+                    db = DBprovider.DBProvider("")
+                    db.get_privelegies(cur,user)
+                    window['-TABLEPRIVELEGIES-'].update(" ",append = False)
+                    window['-TABLEPRIVELEGIES-'].update(str(db.privelegies).replace("),","\n"))
 
                 except Exception as error:
                     sg.Popup('Ошибка', error.args)
-            elif event == '-USERSCOMBO-':
-                sg.Popup('ComboDetected')
+
+
             #elif event == '-GETTABLES-':
             #    try:
                     #tablename = str(values['-COMBOTABLES-']).replace("(" ,"").replace(")" ,"").replace("'" ,"").replace(",","")
