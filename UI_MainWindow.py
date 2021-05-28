@@ -1,13 +1,15 @@
 import PySimpleGUI as sg
 import psycopg2
 import DBprovider
+import paramiko
 
 from DBprovider import *
+ip = '192.168.2.101'
 
 class UI_MainWindow():
 
     def __init__(self,UserLogin,UserPassword):
-        tab1_layout =  [[sg.Text('IP адрес подключения:',size=(20,1)),sg.Input(size=(20,1),default_text=('192.168.2.100'),key=('-HOST-'))],
+        tab1_layout =  [[sg.Text('IP адрес подключения:',size=(20,1)),sg.Input(size=(20,1),default_text=ip,key=('-HOST-'))],
                 [sg.Text('Порт:',size=(20,1)),sg.Input(size=(20,1),default_text =('5432'),key=('-PORT-'))],
                 [sg.Text('Имя базы данных:',size=(20,1)),sg.Input(size=(20,1),default_text=('postgres'),key=('-DATABASE-'))],
                 [sg.Button('Проверить подключение')]]
@@ -26,14 +28,19 @@ class UI_MainWindow():
                                       sg.Combo(values = users, size = (20,1), auto_size_text=True,key='-USERSCOMBO1-'),
                                       sg.Button(button_text="Получить данные",key=('-GETUSERPRIV-'))],
                             [sg.Multiline(auto_size_text=True, key=('-TABLEPRIVELEGIES-'), size=(60, 10))]])]]
-
-        #CREATEDB, CREATEROLE, CREATEUSER, and even SUPERUSER
-        #NOCREATEDB, NOCREATEROLE, NOCREATEUSER ,NOSUPERUSER
+        tab4_layout = [[sg.Button(button_text=('Получить данные о проектах'), key=('-GETPROJECTSDATA-'), size=(20, 1))],
+             [sg.Multiline(auto_size_text=True, key=('-PROJDATARESULTS-'), size=(80, 10)),
+                        sg.Listbox(key=("-PROJLIST-"),size=(40,10),
+                                   values=["Список проектов"],auto_size_text=True)],
+                       [sg.Button(button_text=('Скопировать проект на локальную машину'), key=('-COPYPROJ-')),
+                        sg.Text("Нажмите на проект, и тыкните на кнопку, чтобы скопировать его на локальную машину",auto_size_text=True)],
+                       [sg.Multiline(auto_size_text=True, key=('-SSHRESULT-'), size=(80, 10))]]
 
         column_to_be_centered = [[sg.TabGroup(
             [[sg.Tab('Подключение к БД', tab1_layout),
              sg.Tab('Работа с БД', tab2_layout,disabled=True, key= ('-TAB2-')),
-              sg.Tab('Работа с пользователями БД',tab3_layout, disabled=True, key = ('-TAB3-'))]],
+              sg.Tab('Работа с пользователями БД',tab3_layout, disabled=True, key = ('-TAB3-')),
+               sg.Tab('Проекты', tab4_layout, disabled=True, key=('-TAB4-'))]],
             key=('-TABS-'))]]
 
         layout = [[sg.Text(key='-TOPEXPAND-', font='ANY 1', pad=(0, 0))],  # the thing that expands from top
@@ -80,6 +87,7 @@ class UI_MainWindow():
                        sg.Popup('Title', 'Соединение установлено')
                        window['-TAB2-'].update(disabled=False)
                        window['-TAB3-'].update(disabled=False)
+                       window['-TAB4-'].update(disabled=False)
 
                 except Exception as error:
                     sg.Popup('Title', 'Соединение не установлено', error.args)
@@ -124,14 +132,34 @@ class UI_MainWindow():
 
                 except Exception as error:
                     sg.Popup('Ошибка', error.args)
+            elif event == '-GETPROJECTSDATA-':
+                try:
+                    db = DBprovider.DBProvider("")
+                    db.get_projects(cur)
+                    window['-PROJDATARESULTS-'].update(" ", append=False)
+                    window['-PROJDATARESULTS-'].update(str(db.projects).replace("),", "$\n"))
+                    window['-PROJLIST-'].update(db.projectslist)
+                except Exception as error:
+                    sg.Popup('Ошибка', error.args)
+            elif event == '-COPYPROJ-':
+                try:
+                    sg.Popup(f"Вы выбрали {values['-PROJLIST-'][0]}")
+                    host = ip
+                    user = UserLogin
+                    secret = UserPassword
+                    port = 22
+                    db.getPathbyProj(cur,values['-PROJLIST-'][0])
+                    client = paramiko.SSHClient()
+                    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                    client.connect(hostname=host, username=user, password=secret, port=port)
+                    pathToProject = str(db.projectpath).replace("[('","")
+                    pathToProject = pathToProject[:-4]
+                    stdin, stdout, stderr = client.exec_command(f'git clone ssh://{user}@{host}{pathToProject}')
+                    data = stdout.read() + stderr.read()
+                    window['-SSHRESULT-'].update(data)
+                    client.close()
+                except Exception as error:
+                    sg.Popup('Ошибка', error.args)
 
 
-            #elif event == '-GETTABLES-':
-            #    try:
-                    #tablename = str(values['-COMBOTABLES-']).replace("(" ,"").replace(")" ,"").replace("'" ,"").replace(",","")
-                    #cur.execute("SELECT * FROM {0}".format(tablename))
-                    #cur.execute("select column_name from information_schema.columns where information_schema.columns.table_name='{0}';".format(tablename))
-
-             #   except Exception as error:
-             #       sg.Popup('Ошибка', error.args)
 

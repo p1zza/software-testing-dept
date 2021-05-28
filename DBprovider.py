@@ -1,6 +1,6 @@
 import random
 import string
-
+import paramiko
 import psycopg2
 
 class DBProvider:
@@ -10,6 +10,9 @@ class DBProvider:
     name = ""
     userNames = []
     privelegies = []
+    projects = []
+    projectslist = []
+    projectpath = ""
 
     def __init__(self,name):
         self.name = name
@@ -31,5 +34,24 @@ class DBProvider:
             self.userNames.append(user[0])
             for userdata in user:
                 self.userdata.append(userdata)
+
+    def get_projects(self,cur):
+        expression = str("select * from project;")
+        cur.execute(expression)
+        self.projects.append(cur.fetchall())
+        expression = str("select projectname from project;")
+        cur.execute(expression)
+        res = cur.fetchall()
+        for a in res:
+            self.projectslist.append(a)
+
+    def getPathbyProj(self,cur,projname):
+        expression = str(f"select path from project where projectname = '{projname[0]}';")
+        cur.execute(expression)
+        self.projectpath = cur.fetchall()
+
+
+
+
 
 
