@@ -15,19 +15,38 @@ class UI_MainWindow():
                 [sg.Button('Проверить подключение')]]
 
         users = []
+        tables = []
 
         tab2_layout = [[sg.Input(size=(80,1),key=('-EXPRESSION-'))],
                        [sg.Multiline(auto_size_text=True, key=('-EXPRRESULT-'), size=(80,20))],
                        [sg.Button(button_text=('Выполнить запрос'),key=('-RUNEXPRESSION-'),size=(20,1))]]
 
-        tab3_layout = [[sg.Button(button_text=('Получить данные о пользователях'), key=('-GETUSERSDATA-'), size=(30, 1))],
-                       [sg.Multiline(auto_size_text=True, key=('-USERSDATA-'), size=(100, 10))],
-                       [sg.Frame('',[[sg.Text('Изменить параметры пользователя')],
-                       [sg.Combo(values = users, size = (20,1), auto_size_text=True,key='-USERSCOMBO-')]])],
+        tab3_layout = [
+                        [sg.Button(button_text=('Получить данные о пользователях'), key=('-GETUSERSDATA-'), size=(30, 1))],
+                        [sg.Multiline(auto_size_text=True, key=('-USERSDATA-'), size=(100, 10))],
+                        [sg.Frame('',[[sg.Text('Изменить параметры пользователя')],
+                        [   sg.Listbox(values = users, size = (20,2), auto_size_text=True,key='-USERSCOMBO-'),
+                            sg.Listbox(values = tables, size = (20,2), auto_size_text=True,key='-TABLESCOMBO-'),
+                            sg.Listbox(values = tables, size = (20,2), auto_size_text=True,key='-TABLESPRIVCOMBO-'),
+                            sg.Listbox(values = ["GRANT","REVOKE"], size = (20,2), auto_size_text=True,key='-TABLESSETTINGSCOMBO-')],
+                         [sg.Button(button_text=('Выполнить'), key=('-EXECPRIV-'), size=(30, 1))]])],
                        [sg.Frame('',[[sg.Text('Настроить права пользователя к таблицам'),
                                       sg.Combo(values = users, size = (20,1), auto_size_text=True,key='-USERSCOMBO1-'),
                                       sg.Button(button_text="Получить данные",key=('-GETUSERPRIV-'))],
-                            [sg.Multiline(auto_size_text=True, key=('-TABLEPRIVELEGIES-'), size=(60, 10))]])]]
+                            [sg.Multiline(auto_size_text=True, key=('-TABLEPRIVELEGIES-'), size=(60, 10))]]),
+                            sg.Frame('', [sg.Text('Добавить нового пользователя'),
+                                           [sg.Text('Имя пользователя:'),sg.Input(key='-NEWUSERNAME-'),
+                                                sg.Button(button_text="Создать пользователя", key=('-USERCREATE-'),size=(30, 1))],
+                                           [sg.Checkbox('Superuser',enable_events=True, key='-SUPERUSER-CHECKBOX-')],
+                                           [sg.Checkbox('CreateDB',enable_events=True, key='-CreateDB-CHECKBOX-')],
+                                           [sg.Checkbox('CreateRole', enable_events=True, key='-CreateRole-CHECKBOX-')],
+                                           [sg.Checkbox('INHERIT', enable_events=True, key='-INHERIT-CHECKBOX-')],
+                                           [sg.Checkbox('LOGIN', enable_events=True, key='-LOGIN-CHECKBOX-')]
+                                           ])
+                        ]
+                      ]
+
+
         tab4_layout = [[sg.Button(button_text=('Получить данные о проектах'), key=('-GETPROJECTSDATA-'), size=(20, 1))],
              [sg.Multiline(auto_size_text=True, key=('-PROJDATARESULTS-'), size=(80, 10)),
                         sg.Listbox(key=("-PROJLIST-"),size=(40,10),
@@ -119,6 +138,7 @@ class UI_MainWindow():
                     window['-USERSDATA-'].update(str(data).replace(","," |"), append=True)
                     window['-USERSCOMBO-'].update(values=db.userNames)
                     window['-USERSCOMBO1-'].update(values=db.userNames)
+
                 except Exception as error:
                     sg.Popup('Ошибка', error.args)
 
@@ -129,6 +149,8 @@ class UI_MainWindow():
                     db.get_privelegies(cur,user)
                     window['-TABLEPRIVELEGIES-'].update(" ",append = False)
                     window['-TABLEPRIVELEGIES-'].update(str(db.privelegies).replace("),","\n"))
+                    window['-TABLESCOMBO-'].update(values=db.uniquetables)
+                    window['-TABLESPRIVCOMBO-'].update(values=db.uniqueprivtypes)
 
                 except Exception as error:
                     sg.Popup('Ошибка', error.args)
@@ -154,12 +176,72 @@ class UI_MainWindow():
                     client.connect(hostname=host, username=user, password=secret, port=port)
                     pathToProject = str(db.projectpath).replace("[('","")
                     pathToProject = pathToProject[:-4]
+                    #ssssss= f'git clone ssh://{user}@{host}{pathToProject}'
                     stdin, stdout, stderr = client.exec_command(f'git clone ssh://{user}@{host}{pathToProject}')
                     data = stdout.read() + stderr.read()
                     window['-SSHRESULT-'].update(data)
                     client.close()
                 except Exception as error:
-                    sg.Popup('Ошибка', error.args)
+                    sg.Popup('', error.args)
+
+            elif event == '-EXECPRIV-':
+                try:
+                    if values['-TABLESSETTINGSCOMBO-'][0] == "GRANT":
+                        strrrr= (f"{values['-TABLESSETTINGSCOMBO-'][0]} "
+                             f"{values['-TABLESPRIVCOMBO-'][0]} on "
+                             f"{values['-TABLESCOMBO-'][0]} TO "
+                             f"{values['-USERSCOMBO-'][0]};").replace("('","").replace("',)","")
+                    else:
+                        strrrr = (f"{values['-TABLESSETTINGSCOMBO-'][0]} "
+                                  f"{values['-TABLESPRIVCOMBO-'][0]} ON "
+                                  f"{values['-TABLESCOMBO-'][0]} FROM "
+                                  f"{values['-USERSCOMBO-'][0]};").replace("('", "").replace("',)", "")
+                    sg.Popup(strrrr)
+
+                    db.prev_exec(cur,strrrr)
+                    sg.Popup(db.execresult)
+
+
+                except Exception as error:
+                    sg.Popup('', error.args)
+
+            elif event == '-USERCREATE-':
+                try:
+                    strtoexec = "create role "
+                    strtoexec+= values['-NEWUSERNAME-']
+
+                    if values['-SUPERUSER-CHECKBOX-']:
+                        strtoexec+= " SUPERUSER"
+                    else:
+                        strtoexec += " NOSUPERUSER"
+
+                    if values['-CreateDB-CHECKBOX-']:
+
+                        strtoexec+= " CREATEDB"
+                    else:
+                        strtoexec += " NOCREATEDB"
+
+                    if values['-CreateRole-CHECKBOX-']:
+                        strtoexec+= " CREATEROLE"
+                    else:
+                        strtoexec += " NOCREATEROLE"
+
+                    if values['-INHERIT-CHECKBOX-']:
+                        strtoexec += " INHERIT"
+
+                    if values['-LOGIN-CHECKBOX-']:
+                        strtoexec += " LOGIN"
+
+                    strtoexec+=";"
+                    sg.popup(strtoexec)
+                    db.usercreate(cur,strtoexec)
+                    sg.Popup(db.execresult)
+
+
+
+                except Exception as error:
+                    sg.Popup('', error.args)
+
 
 
 

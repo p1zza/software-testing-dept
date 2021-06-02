@@ -10,4 +10,3 @@ UserLogin = lg.UserLogin
 UserPassword = lg.UserPassword
 
 mw = UI_MainWindow(UserLogin, UserPassword)
-
