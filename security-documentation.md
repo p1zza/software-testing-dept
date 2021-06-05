@@ -6,7 +6,7 @@
   Para = В файл /var/lib/pgsql/data нужно внести адрес виртуальной машины, на которой работает Ubuntu.
   
   
-  *# TYPE  DATABASE  USER  ADDRESS   METHOD*
+  # TYPE  DATABASE  USER  ADDRESS   METHOD
   _host    имя базы данных имя пользователя IP-адрес с маской  метод подключения_ 
   
  
