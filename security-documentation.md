@@ -3,7 +3,7 @@
   Firewall на 
   
 <h2> Правила доступа к БД <h2>
-  В файл /var/lib/pgsql/data нужно внести адрес виртуальной машины, на которой работает Ubuntu.
+  Para = В файл /var/lib/pgsql/data нужно внести адрес виртуальной машины, на которой работает Ubuntu.
   
   
   *# TYPE  DATABASE  USER  ADDRESS   METHOD*
