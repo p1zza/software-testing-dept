@@ -3,8 +3,8 @@
   Система уставливается с официального сайта
   
   
-  Для CentOS - https://www.centos.org/centos-linux/
-  Для Ubuntu - https://ubuntu.com/#download
+  > Для CentOS - https://www.centos.org/centos-linux/
+  > Для Ubuntu - https://ubuntu.com/#download
 <h2> Требования к системе <h2>
 
 |Название требования | Ubuntu  | CentOS |
