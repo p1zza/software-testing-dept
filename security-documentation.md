@@ -1,13 +1,49 @@
-<h1> Документация по средствам безопасности <h1>
-<h2> Настройка Firewall <h2>
-  Firewall на 
-  
-<h2> Правила доступа к БД <h2>
-  Para = В файл /var/lib/pgsql/data нужно внести адрес виртуальной машины, на которой работает Ubuntu.
-  
-  
-  # TYPE  DATABASE  USER  ADDRESS   METHOD
-  _host    имя базы данных имя пользователя IP-адрес с маской  метод подключения_ 
-  
+<h1> Документация по средствам безопасности
+<h2> Настройка Firewall 
  
+<h4>  
+Для проверки настроек Firewall на CentOS нужно выполнить команду: 
+> systemctl status firewalld
+
+Работа Firewall завязана на зонах, поэтому нужно проверить настройки public-зоны:
+> firewall-cmd --zone=public --list-all
+
+После этого нужно добавить порт, который прослушивается PostgreSQL, в исключения:
+> firewall-cmd --zone=public --add-port 5432/tcp --permanent
+  
+И после этого нужно перезапустить firewall
+> firewall-cmd --reload
+  
+
+Для проверки настроек Firewall на Ubuntu нужно выполнить команду:
+> ufw status verbose
+  
+Далее необходимо настроить Firewwall, на запрет входящих подключений и на разрешение исходящих:
+> ufw default deny incoming
+  
+  
+> ufw default allow outgoing
+  
+  
+<h2> Правила доступа к БД 
+  
+  
+<h4>В файл */var/lib/pgsql/data/pg_hba.conf* нужно внести адрес виртуальной машины, на которой работает Ubuntu.
+
+  
+ TYPE | DATABASE | USER | ADDRESS  | METHOD
+  ------|------|------|------|------|
+  host |   all | all | IP-адрес подсети с маской | trust
+ 
+
+В файл */var/lib/pgsql/data/postgresql.conf* нужно изменить параметр, для настройки прослушивания всех адресов, с которых будут обращения к базе данных: 
+> listen_addresses = '*' 
+  
+  
+Далее нужно изменить порт, к которому нужно будет подключаться удалённо:
+> port = 5432  
+
+Также нужно изменить количество одновременных подключений:
+> max_connections = 5
+<h4>
 <h2> Используемые средства безопасности
